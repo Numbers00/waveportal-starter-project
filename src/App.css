@@ -1,34 +1,59 @@
-.mainContainer {
-  display: flex;
-  justify-content: center;
+.main-container {
   width: 100%;
-  margin-top: 64px;
 }
 
-.dataContainer {
+.upper-container {
+  height: 100vh;
+  padding-top: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.default-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   max-width: 600px;
 }
 
-.header {
+.default-container.waved {
+  box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+  border-radius: 3px;
+  padding: 16px;
+  transform: translate(0, calc(50vh - 50% - 64px));
+  transition: 0.33s;
+}
+
+.default-container-header {
   text-align: center;
   font-size: 32px;
   font-weight: 600;
 }
 
-.bio {
+.default-container-bio {
   text-align: center;
   color: gray;
   margin-top: 16px;
 }
 
-.waveButton {
+.wave-button {
   cursor: pointer;
   margin-top: 16px;
   padding: 8px;
   border: 0;
   border-radius: 5px;
-  
+}
+
+.wave-button:hover {
+  background-color: #198754;
+  color: white;
+  font-weight: bold;
+  transition: 0.33s;
+}
+
+.wave-button.waved {
+  background-color: #198754;
+  color: white;
+  font-weight: bold;
 }
