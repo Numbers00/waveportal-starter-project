@@ -3,6 +3,7 @@
 }
 
 .upper-container {
+  position: relative;
   height: 100vh;
   padding-top: 64px;
   display: flex;
