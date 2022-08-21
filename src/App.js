@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import Form from 'react-bootstrap/Form';
 import * as d3 from 'd3';
 import WordCloud from 'react-d3-cloud';
 import { scaleOrdinal } from 'd3-scale';
@@ -15,20 +16,49 @@ import './App.css';
 
 export default function App() {
   const [runConfetti, setRunConfetti] = useState(false);
+  const [cryptosValue, setCryptosValue] = useState('');
 
   const upperContainer = useRef(null);
   const wordCloudContainer = useRef(null);
+  const defaultContainerHeader = useRef(null);
   const defaultContainer = useRef(null);
+  const defaultContainerText = useRef(null);
   const waveBtn = useRef(null);
+  const cryptosInput = useRef(null);
 
   const { wWidth, wHeight } = useWindowSize();
+  
+  const wordCloudWidth = wHeight - 250 - 64;
 
   const wave = () => {
     setRunConfetti(true);
 
     defaultContainer.current.classList.add('waved');
+    defaultContainerHeader.current.textContent = '👋 Just a bit more!'
+    defaultContainerText.current.textContent = `
+      Hey there! Can I ask you to write down the cryptocurrencies
+      you use in the text input below? Separate them by commas!
+    `;
+
     waveBtn.current.classList.add('waved');
     waveBtn.current.disabled = true;
+    setTimeout(() => {
+      waveBtn.current.style.display = 'none';
+      cryptosInput.current.classList.remove('d-none');
+    }, 333);
+  }
+
+  const handleCryptosSubmit = () => {
+    if (cryptosValue.length > 0) {
+      setCryptosValue('');
+      cryptosInput.current.classList.add('d-none');
+      defaultContainer.current.classList.add('answered');
+      wordCloudContainer.current.style.display = 'block';
+
+      waveBtn.current.textContent = 'See what others answered?';
+      waveBtn.current.style.display = '';
+      waveBtn.current.disabled = false;
+    }
   }
 
   let wordCount = [];
@@ -64,8 +94,8 @@ export default function App() {
         <div className='word-cloud-container' ref={wordCloudContainer}>
           <WordCloud
             data={wordCloudData}
-            width={1200}
-            height={1200}
+            width={wHeight}
+            height={wHeight}
             font="Segoe UI"
             fontWeight="bold"
             fontSize={(word) => Math.log2(word.value) * 5}
@@ -87,16 +117,25 @@ export default function App() {
           />
         </div>
         <div className='default-container' ref={defaultContainer}>
-          <div className='default-container-header'>
-          👋 Hey there!
+          <div ref={defaultContainerHeader} className='default-container-header'>
+            👋 Hey there!
           </div>
-          <div className='default-container-bio'>
+          <div ref={defaultContainerText} className='default-container-text'>
             I am Numbers00 and I especially like all things web-related. I don't really know what to put here, but connect
             your Ethereum wallet and try waving at me!
           </div>
           <button className='wave-button' ref={waveBtn} onClick={wave}>
             Wave?
           </button>
+          <Form.Control
+            ref={cryptosInput}
+            value={cryptosValue}
+            onChange={(e) => setCryptosValue(e.target.value)}
+            onKeyUp={(e) => e.key === 'Enter' ? handleCryptosSubmit() : null}
+            type='text'
+            className='cryptos-input d-none'
+            placeholder='bitcoin, ethereum, litecoin, solana, harmony'
+          />
         </div>
       </div>
     </div>

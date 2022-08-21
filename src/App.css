@@ -17,6 +17,7 @@
   flex-direction: column;
   justify-content: center;
   max-width: 600px;
+  z-index: 10 !important;
 }
 
 .default-container.waved {
@@ -27,11 +28,21 @@
   transition: 0.33s;
 }
 
+.default-container.answered {
+  transform: translate(0, calc(88vh - 50% - 64px));
+  transition: 0.33s;
+}
+
 .word-cloud-container {
   display: none;
-  position: absolute;
-  width: 1200px !important;
-  height: 1200px !important;
+  top: 64px;
+  width: calc(100vh - 250px - 64px) !important;
+  height: calc(100vh - 250px - 64px) !important;
+  z-index: -1 !important;
+}
+
+.word-cloud-container text {
+  z-index: -1 !important;
 }
 
 .default-container-header {
@@ -40,10 +51,9 @@
   font-weight: 600;
 }
 
-.default-container-bio {
+.default-container-text {
   text-align: center;
   color: gray;
-  margin-top: 16px;
 }
 
 .wave-button {
@@ -51,7 +61,7 @@
   margin-top: 16px;
   padding: 8px;
   border: 0;
-  border-radius: 5px;
+  border-radius: 0.2em;
 }
 
 .wave-button:hover {
@@ -65,4 +75,9 @@
   background-color: #198754;
   color: white;
   font-weight: bold;
+}
+
+.cryptos-input {
+  margin-top: 16px;
+  height: 40px !important;
 }
