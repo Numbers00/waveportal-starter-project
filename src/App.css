@@ -36,9 +36,13 @@
 .word-cloud-container {
   display: none;
   top: 64px;
-  width: calc(100vh - 250px - 64px) !important;
+  width: 100vw !important;
   height: calc(100vh - 250px - 64px) !important;
-  z-index: -1 !important;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+  overflow-x: hidden;
+  overflow-y: hidden;
+  cursor: grab;
+  transition: 0.33s;
 }
 
 .word-cloud-container text {
@@ -56,15 +60,16 @@
   color: gray;
 }
 
-.wave-button {
+.wave-button, .see-button {
   cursor: pointer;
   margin-top: 16px;
   padding: 8px;
   border: 0;
   border-radius: 0.2em;
+  color: #333;
 }
 
-.wave-button:hover {
+.wave-button:hover, .see-button:hover {
   background-color: #198754;
   color: white;
   font-weight: bold;

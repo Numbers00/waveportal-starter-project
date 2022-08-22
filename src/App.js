@@ -18,6 +18,7 @@ export default function App() {
   const [runConfetti, setRunConfetti] = useState(false);
   const [cryptosValue, setCryptosValue] = useState('');
 
+  const confetti = useRef(null);
   const upperContainer = useRef(null);
   const wordCloudContainer = useRef(null);
   const defaultContainerHeader = useRef(null);
@@ -27,8 +28,10 @@ export default function App() {
   const cryptosInput = useRef(null);
 
   const { wWidth, wHeight } = useWindowSize();
-  
-  const wordCloudWidth = wHeight - 250 - 64;
+
+  useEffect(() => {
+    wordCloudContainer.current.addEventListener('mousedown', mouseDownHandler);
+  }, []);
 
   const wave = () => {
     setRunConfetti(true);
@@ -46,6 +49,13 @@ export default function App() {
       waveBtn.current.style.display = 'none';
       cryptosInput.current.classList.remove('d-none');
     }, 333);
+    cryptosInput.current.disabled = true;
+    setTimeout(() => {
+      cryptosInput.current.disabled = false;
+      cryptosInput.current.focus();
+
+      confetti.current.remove();
+    }, 3000);
   }
 
   const handleCryptosSubmit = () => {
@@ -55,14 +65,54 @@ export default function App() {
       defaultContainer.current.classList.add('answered');
       wordCloudContainer.current.style.display = 'block';
 
-      waveBtn.current.textContent = 'See what others answered?';
-      waveBtn.current.style.display = '';
-      waveBtn.current.disabled = false;
+      defaultContainer.current.classList.remove('waved');
+      defaultContainerHeader.current.textContent = '👋 Thanks for answering!'
+      defaultContainerText.current.textContent = `
+        Thanks for answering! See the word cloud above to see which answer's most popular, or
+        scroll further below to see what others have answered in the past!
+      `;
     }
   }
 
+  // code adapted from and thanks to https://htmldom.dev/drag-to-scroll/
+  let pos = { top: 0, left: 0, x: 0, y: 0 };
+  const mouseDownHandler = (e) => {
+    wordCloudContainer.current.style.cursor = 'grabbing';
+    wordCloudContainer.current.style.userSelect = 'none';
+
+    pos = {
+        // The current scroll
+        left: wordCloudContainer.current.scrollLeft,
+        top: wordCloudContainer.current.scrollTop,
+        // Get the current mouse position
+        x: e.clientX,
+        y: e.clientY,
+    };
+
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+  };
+
+  const mouseMoveHandler = function (e) {
+    // How far the mouse has been moved
+    const dx = e.clientX - pos.x;
+    const dy = e.clientY - pos.y;
+
+    // Scroll the element
+    wordCloudContainer.current.scrollTop = pos.top - dy;
+    wordCloudContainer.current.scrollLeft = pos.left - dx;
+  };
+
+  const mouseUpHandler = function () {
+    document.removeEventListener('mousemove', mouseMoveHandler);
+    document.removeEventListener('mouseup', mouseUpHandler);
+
+    wordCloudContainer.current.style.cursor = 'grab';
+    wordCloudContainer.current.style.removeProperty('user-select');
+  };
+
   let wordCount = [];
-  const cryptosText = 'bitcoin,ethereum,litecoin,cardano,harmony,harmony,ethereum,harmony,bitcoin,ethereum,harmony,xrp,xrp,harmony';
+  const cryptosText = 'bitcoin,ethereum,bnb,xrp,cardano,solana,dogecoin,polkadot,shiba inu,avalanche,polygon,tron,uniswap,unus sed leo,ethereum classic,litecoin,ftx token,chainlink,near protocol,cronos,cosmos,stellar,monero,bitcoin cash,flow,algorand,vechain,filecoin,internet computer,apecoin,decentraland,the sandbox,tezos,eos,hedera,quant,elrond,theta network,axie infinity,aave,chiliz,okb,bitcoin sv,zcash';
   const inputWords = cryptosText.split(/,/g);
   inputWords.forEach(word => {
     const lowerCased = word.trim().toLowerCase();
@@ -83,25 +133,27 @@ export default function App() {
   return (
     <div className='main-container'>
       <Confetti
+        ref={confetti}
         width={wWidth}
         height={wHeight}
-        numberOfPieces={2400}
+        numberOfPieces={2000}
+        gravity={0.6}
         recycle={false}
         run={runConfetti}
-        tweenDuration={35000}
+        tweenDuration={10000}
       />
       <div className='upper-container' ref={upperContainer}>
         <div className='word-cloud-container' ref={wordCloudContainer}>
           <WordCloud
             data={wordCloudData}
-            width={wHeight}
+            width={wWidth}
             height={wHeight}
             font="Segoe UI"
             fontWeight="bold"
             fontSize={(word) => Math.log2(word.value) * 5}
             spiral="rectangular"
-            // rotate={() => ~~(Math.random() * 2) * 90}
-            rotate={0}
+            rotate={() => ~~(Math.random() * 2) * 90}
+            // rotate={0}
             padding={5}
             random={Math.random}
             fill={(d, i) => schemeCategory10ScaleOrdinal(i)}
