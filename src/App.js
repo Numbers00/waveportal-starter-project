@@ -29,10 +29,6 @@ export default function App() {
 
   const { wWidth, wHeight } = useWindowSize();
 
-  useEffect(() => {
-    wordCloudContainer.current.addEventListener('mousedown', mouseDownHandler);
-  }, []);
-
   const wave = () => {
     setRunConfetti(true);
 
@@ -68,8 +64,8 @@ export default function App() {
       defaultContainer.current.classList.remove('waved');
       defaultContainerHeader.current.textContent = '👋 Thanks for answering!'
       defaultContainerText.current.textContent = `
-        Thanks for answering! See the word cloud above to see which answer's most popular, or
-        scroll further below to see what others have answered in the past!
+        Thanks for answering! See the word cloud above to see which answer's most popular,
+        scroll to navigate it
       `;
     }
   }
@@ -92,6 +88,10 @@ export default function App() {
     document.addEventListener('mousemove', mouseMoveHandler);
     document.addEventListener('mouseup', mouseUpHandler);
   };
+
+  useEffect(() => {
+    wordCloudContainer.current.addEventListener('mousedown', mouseDownHandler);
+  }, []);
 
   const mouseMoveHandler = function (e) {
     // How far the mouse has been moved
