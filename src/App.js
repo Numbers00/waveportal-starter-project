@@ -1,6 +1,5 @@
 import { ethers } from 'ethers';
 import Form from 'react-bootstrap/Form';
-import * as d3 from 'd3';
 import WordCloud from 'react-d3-cloud';
 import { scaleOrdinal } from 'd3-scale';
 import { schemeCategory10 } from 'd3-scale-chromatic';
