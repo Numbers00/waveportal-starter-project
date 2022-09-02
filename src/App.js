@@ -12,8 +12,19 @@ import React, {
   useRef
 } from 'react';
 import './App.css';
+import abi from './utils/WavePortal.json';
 
 export default function App() {
+  /**
+  * Create a variable here that holds the contract address after you deploy!
+  */
+  const contractAddress = "0x6F7Cd529dF90a2CE3a97aDDc37AE33320E21e7F5";
+  /**
+   * Create a variable here that references the abi content!
+   */
+   const contractABI = abi.abi;
+  
+  const [currentAccount, setCurrentAccount] = useState('');
   const [runConfetti, setRunConfetti] = useState(false);
   const [cryptosValue, setCryptosValue] = useState('');
 
@@ -27,6 +38,65 @@ export default function App() {
   const cryptosInput = useRef(null);
 
   const { wWidth, wHeight } = useWindowSize();
+
+  const checkIfWalletIsConnected = async () => {
+    try {
+      /*
+      * First make sure we have access to window.ethereum
+      */
+      const { ethereum } = window;
+      if (!ethereum) {
+        console.log('Make sure you have metamask!');
+      } else {
+        console.log('We have the ethereum object', ethereum);
+      }
+
+      /*
+      * Check if we're authorized to access the user's wallet
+      */
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+      if (accounts.length) {
+        const account = accounts[0];
+        console.log('Found an authorized account:', account);
+        setCurrentAccount(account);
+      } else {
+        console.log('No authorized accounts found');
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    checkIfWalletIsConnected();
+  }, []);
+
+  /**
+  * Implement your connectWallet method here
+  */
+   const connectWallet = async () => {
+    try {
+      const { ethereum } = window;
+      if (!ethereum) {
+        alert('You do not have Metamask, you need Metamask to continue');
+        return;
+      }
+
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+
+      console.log('Connected', accounts[0]);
+      setCurrentAccount(accounts[0]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentAccount) {
+      waveBtn.current.classList.remove('disabled');
+      waveBtn.current.classList.add('active');
+    }
+  }, [currentAccount]);
 
   const wave = () => {
     setRunConfetti(true);
@@ -51,23 +121,50 @@ export default function App() {
 
       confetti.current.remove();
     }, 3000);
-  }
+  };
 
-  const handleCryptosSubmit = () => {
+  const handleCryptosSubmit = async () => {
     if (cryptosValue.length > 0) {
-      setCryptosValue('');
-      cryptosInput.current.classList.add('d-none');
-      defaultContainer.current.classList.add('answered');
-      wordCloudContainer.current.style.display = 'block';
+      try {
+        const { ethereum } = window;
+        if (ethereum) {
+          const provider = new ethers.providers.Web3Provider(ethereum);
+          const signer = provider.getSigner();
+          const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
-      defaultContainer.current.classList.remove('waved');
-      defaultContainerHeader.current.textContent = '👋 Thanks for answering!'
-      defaultContainerText.current.textContent = `
-        Thanks for answering! See the word cloud above to see which answer's most popular,
-        scroll to navigate it
-      `;
+          const cryptosSet = [...new Set(cryptosValue.split(',').map(crypto => crypto.trim()))];
+          console.log(cryptosSet);
+          for (let i = 0; i < cryptosSet.length; i++) {
+            const waveTxn = await wavePortalContract.wave(cryptosValue);
+            console.log('Mining...', waveTxn.hash);
+
+            await waveTxn.wait();
+            console.log('Mined -- ', waveTxn.hash);
+          }
+
+          const count = await wavePortalContract.getTotalWaves();
+          console.log('Retrieved total wave count...', count.toNumber());
+
+          setCryptosValue('');
+
+          cryptosInput.current.classList.add('d-none');
+          defaultContainer.current.classList.add('answered');
+          wordCloudContainer.current.style.display = 'block';
+
+          defaultContainer.current.classList.remove('waved');
+          defaultContainerHeader.current.textContent = `👋 Thanks! We\'re at ${count.toNumber()} waves now!`;
+          defaultContainerText.current.textContent = `
+            Thanks for answering! See the word cloud above to see which answer's most popular,
+            click and drag to navigate the word cloud!
+          `;
+        } else {
+          console.log('Ethereum object doesn\'t exist!');
+        }
+      } catch (err) {
+        console.log(err);
+      }
     }
-  }
+  };
 
   // code adapted from and thanks to https://htmldom.dev/drag-to-scroll/
   let pos = { top: 0, left: 0, x: 0, y: 0 };
@@ -112,7 +209,7 @@ export default function App() {
 
   let wordCount = [];
   const cryptosText = 'bitcoin,ethereum,bnb,xrp,cardano,solana,dogecoin,polkadot,shiba inu,avalanche,polygon,tron,uniswap,unus sed leo,ethereum classic,litecoin,ftx token,chainlink,near protocol,cronos,cosmos,stellar,monero,bitcoin cash,flow,algorand,vechain,filecoin,internet computer,apecoin,decentraland,the sandbox,tezos,eos,hedera,quant,elrond,theta network,axie infinity,aave,chiliz,okb,bitcoin sv,zcash';
-  const inputWords = cryptosText.split(/,/g);
+  const inputWords = cryptosText.concat(cryptosValue ? `,${cryptosValue}` : '').split(/,/g);
   inputWords.forEach(word => {
     const lowerCased = word.trim().toLowerCase();
     Object.keys(wordCount).includes(lowerCased)
@@ -175,7 +272,14 @@ export default function App() {
             I am Numbers00 and I especially like all things web-related. I don't really know what to put here, but connect
             your Ethereum wallet and try waving at me!
           </div>
-          <button className='wave-button' ref={waveBtn} onClick={wave}>
+          {
+            !currentAccount
+              ? <button className='connect-button btn-theme1' onClick={connectWallet}>
+                  Connect to Metamask
+                </button>
+              : null
+          }
+          <button className='wave-button btn-theme1 disabled' ref={waveBtn} onClick={wave}>
             Wave?
           </button>
           <Form.Control

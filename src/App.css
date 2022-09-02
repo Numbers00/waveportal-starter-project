@@ -60,7 +60,7 @@
   color: gray;
 }
 
-.wave-button, .see-button {
+.btn-theme1 {
   cursor: pointer;
   margin-top: 16px;
   padding: 8px;
@@ -69,7 +69,19 @@
   color: #333;
 }
 
-.wave-button:hover, .see-button:hover {
+.btn-theme1 {
+  margin-top: 16px;
+  padding: 8px;
+  border: 0;
+  border-radius: 0.2em;
+  color: #333;
+}
+
+.wave-button.disabled {
+  cursor: default !important;
+}
+
+.connect-button:hover, .btn-theme1.active:hover {
   background-color: #198754;
   color: white;
   font-weight: bold;
