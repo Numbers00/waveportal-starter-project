@@ -27,6 +27,7 @@ export default function App() {
   const [currentAccount, setCurrentAccount] = useState('');
   const [runConfetti, setRunConfetti] = useState(false);
   const [cryptosValue, setCryptosValue] = useState('');
+  const [wordCloudData, setWordCloudData] = useState([]);
 
   const confetti = useRef(null);
   const upperContainer = useRef(null);
@@ -123,6 +124,27 @@ export default function App() {
     }, 3000);
   };
 
+  const formCryptoObjs = (malformedCryptos) => {
+    let cryptos = [];
+    for (let i = 0; i < malformedCryptos.length; i++) {
+      cryptos.push({
+        name: malformedCryptos[0][i],
+        count: Number(malformedCryptos[1][i])
+      });
+    }
+    return cryptos;
+  };
+
+  const generateCryptosText = (malformedCryptos) => {
+    const cryptos = formCryptoObjs(malformedCryptos);
+    let cryptosText = '';
+    for (let i = 0; i < cryptos.length; i++) {
+      cryptosText += `${cryptos[i].name},`.repeat(cryptos[i].count);
+    }
+    cryptosText = cryptosText.slice(0, -1).split(',').map((crypto) => crypto.trim()).join(',');
+    return cryptosText;
+  }
+
   const handleCryptosSubmit = async () => {
     if (cryptosValue.length > 0) {
       try {
@@ -133,14 +155,32 @@ export default function App() {
           const wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
 
           const cryptosSet = [...new Set(cryptosValue.split(',').map(crypto => crypto.trim()))];
-          console.log(cryptosSet);
           for (let i = 0; i < cryptosSet.length; i++) {
-            const waveTxn = await wavePortalContract.wave(cryptosValue);
+            const waveTxn = await wavePortalContract.wave(cryptosSet[i]);
             console.log('Mining...', waveTxn.hash);
 
             await waveTxn.wait();
             console.log('Mined -- ', waveTxn.hash);
           }
+
+          const enteredCryptos = generateCryptosText(await wavePortalContract.getCryptos());
+          let wordCount = [];
+          const cryptosText = 'bitcoin,ethereum,bnb,xrp,cardano,solana,dogecoin,polkadot,shiba inu,avalanche,polygon,tron,uniswap,unus sed leo,ethereum classic,litecoin,ftx token,chainlink,near protocol,cronos,cosmos,stellar,monero,bitcoin cash,flow,algorand,vechain,filecoin,internet computer,apecoin,decentraland,the sandbox,tezos,eos,hedera,quant,elrond,theta network,axie infinity,aave,chiliz,okb,bitcoin sv,zcash'
+            + enteredCryptos;
+          const inputWords = cryptosText.concat(cryptosValue ? `,${cryptosValue}` : '').split(/,/g);
+          inputWords.forEach(word => {
+            const lowerCased = word.trim().toLowerCase();
+            Object.keys(wordCount).includes(lowerCased)
+              ? wordCount[lowerCased]++
+              : wordCount[lowerCased] = 1;
+          });
+          const wordEntries = Object.entries(wordCount);
+          setWordCloudData(wordEntries.map(entry => {
+            return {
+              text: entry[0],
+              value: entry[1] * 100
+            }
+          }));
 
           const count = await wavePortalContract.getTotalWaves();
           console.log('Retrieved total wave count...', count.toNumber());
@@ -152,7 +192,7 @@ export default function App() {
           wordCloudContainer.current.style.display = 'block';
 
           defaultContainer.current.classList.remove('waved');
-          defaultContainerHeader.current.textContent = `👋 Thanks! We\'re at ${count.toNumber()} waves now!`;
+          defaultContainerHeader.current.textContent = `👋 Thanks! We\'re at ${count.toNumber()} cryptos entered now!`;
           defaultContainerText.current.textContent = `
             Thanks for answering! See the word cloud above to see which answer's most popular,
             click and drag to navigate the word cloud!
@@ -207,22 +247,22 @@ export default function App() {
     wordCloudContainer.current.style.removeProperty('user-select');
   };
 
-  let wordCount = [];
-  const cryptosText = 'bitcoin,ethereum,bnb,xrp,cardano,solana,dogecoin,polkadot,shiba inu,avalanche,polygon,tron,uniswap,unus sed leo,ethereum classic,litecoin,ftx token,chainlink,near protocol,cronos,cosmos,stellar,monero,bitcoin cash,flow,algorand,vechain,filecoin,internet computer,apecoin,decentraland,the sandbox,tezos,eos,hedera,quant,elrond,theta network,axie infinity,aave,chiliz,okb,bitcoin sv,zcash';
-  const inputWords = cryptosText.concat(cryptosValue ? `,${cryptosValue}` : '').split(/,/g);
-  inputWords.forEach(word => {
-    const lowerCased = word.trim().toLowerCase();
-    Object.keys(wordCount).includes(lowerCased)
-      ? wordCount[lowerCased]++
-      : wordCount[lowerCased] = 1;
-  });
-  const wordEntries = Object.entries(wordCount);
-  const wordCloudData = wordEntries.map(entry => {
-    return {
-      text: entry[0],
-      value: entry[1] * 100
-    }
-  });
+  // let wordCount = [];
+  // const cryptosText = 'bitcoin,ethereum,bnb,xrp,cardano,solana,dogecoin,polkadot,shiba inu,avalanche,polygon,tron,uniswap,unus sed leo,ethereum classic,litecoin,ftx token,chainlink,near protocol,cronos,cosmos,stellar,monero,bitcoin cash,flow,algorand,vechain,filecoin,internet computer,apecoin,decentraland,the sandbox,tezos,eos,hedera,quant,elrond,theta network,axie infinity,aave,chiliz,okb,bitcoin sv,zcash';
+  // const inputWords = cryptosText.concat(cryptosValue ? `,${cryptosValue}` : '').split(/,/g);
+  // inputWords.forEach(word => {
+  //   const lowerCased = word.trim().toLowerCase();
+  //   Object.keys(wordCount).includes(lowerCased)
+  //     ? wordCount[lowerCased]++
+  //     : wordCount[lowerCased] = 1;
+  // });
+  // const wordEntries = Object.entries(wordCount);
+  // setWordCloudData(wordEntries.map(entry => {
+  //   return {
+  //     text: entry[0],
+  //     value: entry[1] * 100
+  //   }
+  // }));
 
   const schemeCategory10ScaleOrdinal = scaleOrdinal(schemeCategory10);
 
